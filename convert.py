@@ -175,11 +175,14 @@ def cleanup_mediawiki(text):
             line = undiv
         # Look for any category tag, usually done as a single line:
         if "[[Category:" in line:
-            tag = line[line.index("[[Category:") + 11:]
-            tag = tag[:tag.index("]]")]
-            assert ("[[Category:%s]]" % tag) in line, "Infered %r from %s" % (tag, line)
-            categories.append(tag)
-            line = line.replace("[[Category:%s]]" % tag, "").strip()
+            try:
+                tag = line[line.index("[[Category:") + 11:]
+                tag = tag[:tag.index("]]")]
+                assert ("[[Category:%s]]" % tag) in line, "Inferred %r from %s" % (tag, line)
+                categories.append(tag)
+                line = line.replace("[[Category:%s]]" % tag, "").strip()
+            except:
+                pass
             if not line:
                 continue
         # Special case fix for any category links,
