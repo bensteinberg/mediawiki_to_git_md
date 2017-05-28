@@ -358,7 +358,7 @@ def commit_files(filenames, username, date, comment):
     assert filenames, "Nothing to commit: %r" % filenames
     for f in filenames:
         assert os.path.isfile(f), f
-    cmd = '"%s" add "%s"' % (git, '" "'.join(filenames))
+    cmd = '"%s" add "%s"' % (git, '" "'.join(map(lambda f: f.replace('"', '\"'), filenames)))
     run(cmd)
     # TODO - how to detect and skip empty commit?
     if username in user_mapping:
