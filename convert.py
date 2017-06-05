@@ -17,6 +17,8 @@ def main():
 
     It does not yet handle some revisions where mediawiki markdown was broken
     in the original, like the absence of a closing tag
+
+    need to escape and/or quote YAML values in output....
     """
 
     parser = argparse.ArgumentParser()
@@ -475,9 +477,9 @@ def dump_revision(mw_filename, md_filename, text, title, args):
                 handle.write(original.encode("utf8"))
             with open(md_filename, "w") as handle:
                 handle.write("---\n")
-                handle.write("title: %s\n" % title.encode("utf-8"))
-                handle.write("permalink: %s\n" % make_url(title, args.prefix).encode("utf-8"))
-                handle.write("redirect_to: /%s\n" % make_url(redirect, args.prefix).encode("utf-8"))
+                handle.write("title: %s\n" % safe_for_yaml(title.encode("utf-8")))
+                handle.write("permalink: %s\n" % safe_for_yaml(make_url(title, args.prefix).encode("utf-8")))
+                handle.write("redirect_to: /%s\n" % safe_for_yaml(make_url(redirect, args.prefix).encode("utf-8")))
                 handle.write("---\n\n")
                 handle.write("You should automatically be redirected to [%s](/%s)\n"
                              % (redirect.encode("utf-8"), make_url(redirect, args.prefix).encode("utf-8")))
@@ -511,8 +513,8 @@ def dump_revision(mw_filename, md_filename, text, title, args):
         return False
     with open(md_filename, "w") as handle:
         handle.write("---\n")
-        handle.write("title: %s\n" % title.encode("utf-8"))
-        handle.write("permalink: %s\n" % make_url(title, args.prefix).encode("utf-8"))
+        handle.write("title: %s\n" % safe_for_yaml(title.encode("utf-8")))
+        handle.write("permalink: %s\n" % safe_for_yaml(make_url(title, args.prefix).encode("utf-8")))
         if title.startswith("Category:"):
             # This assumes have layout template called tagpage
             # which will insert the tag listing automatically
@@ -553,6 +555,7 @@ def commit_files(filenames, username, date, comment, user_mapping, args, missing
     assert filenames, "Nothing to commit: %r" % filenames
     for f in filenames:
         assert os.path.isfile(f), f
+    # do we need to escape anything other than double-quote here?
     cmd = '"{0}" add "{1}"'.format(args.git,
                                    '" "'.join(map(lambda x: x.replace('"', '\\"').encode('utf-8'), filenames)))
     run(cmd)
@@ -606,6 +609,10 @@ def commit_file(title, filename, date, username, contents, comment, user_mapping
     with open(filename, "wb") as handle:
         handle.write(base64.b64decode(contents))
     return commit_files([filename], username, date, comment, user_mapping, args, missing_users)
+
+
+def safe_for_yaml(val):
+    return '"{0}"'.format(val.replace('"', '\\"').replace("'", "\\'"))
 
 if __name__ == '__main__':
     main()
