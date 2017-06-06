@@ -110,7 +110,7 @@ def commit_revisions(cursor, user_mapping, page_prefixes_to_ignore, args, missin
         md_filename = make_filename(title, args.markdown_ext, args.prefix)
         mw_filename = make_filename(title, args.mediawiki_ext, args.prefix)
         print("Converting %s as of revision %s by %s" % (md_filename, date, username))
-        if dump_revision(mw_filename, md_filename, text, title, args):
+        if dump_revision(mw_filename, md_filename, text, title, args, date):
             missing_users = commit_revision(
                 mw_filename, md_filename, username, date, comment, user_mapping, args, missing_users)
         else:
@@ -464,7 +464,7 @@ def ignore_by_prefix(title, page_prefixes_to_ignore):
     return False
 
 
-def dump_revision(mw_filename, md_filename, text, title, args):
+def dump_revision(mw_filename, md_filename, text, title, args, date):
     # We may have unicode, e.g. character u'\xed' (accented i)
     original = text
     text, categories = cleanup_mediawiki(text)
@@ -480,6 +480,7 @@ def dump_revision(mw_filename, md_filename, text, title, args):
                 handle.write("title: %s\n" % safe_for_yaml(title.encode("utf-8")))
                 handle.write("permalink: %s\n" % safe_for_yaml(make_url(title, args.prefix).encode("utf-8")))
                 handle.write("redirect_to: /%s\n" % safe_for_yaml(make_url(redirect, args.prefix).encode("utf-8")))
+                handle.write("date: %s\n" % (date,))
                 handle.write("---\n\n")
                 handle.write("You should automatically be redirected to [%s](/%s)\n"
                              % (redirect.encode("utf-8"), make_url(redirect, args.prefix).encode("utf-8")))
@@ -515,6 +516,7 @@ def dump_revision(mw_filename, md_filename, text, title, args):
         handle.write("---\n")
         handle.write("title: %s\n" % safe_for_yaml(title.encode("utf-8")))
         handle.write("permalink: %s\n" % safe_for_yaml(make_url(title, args.prefix).encode("utf-8")))
+        handle.write("date: %s\n" % (date,))
         if title.startswith("Category:"):
             # This assumes have layout template called tagpage
             # which will insert the tag listing automatically
